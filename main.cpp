@@ -1,6 +1,14 @@
 #include <cmath>
 #include "tgaimage.h"
 
+void line(int startX, int startY, int endX, int endY, TGAImage &image, TGAColor color) {
+    for (float interpolationFactor = 0; interpolationFactor < 1; interpolationFactor += 0.1) {
+        int currentX = startX + (endX - startX) * interpolationFactor;
+        int currentY = startY + (endY - startY) * interpolationFactor;
+        image.set(currentX, currentY, color);
+    }
+}
+
 // Define color constants in BGRA format (Blue, Green, Red, Alpha)
 // Each color component ranges from 0-255
 constexpr TGAColor white   = {255, 255, 255, 255}; // Pure white (all channels at max)
