@@ -19,16 +19,28 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU|Intel")
   add_compile_options(-Wall)
 endif()
 
-find_package(OpenMP COMPONENTS CXX)
+# Make OpenMP optional with better error handling
+option(USE_OPENMP "Enable OpenMP parallelization" OFF)
+if(USE_OPENMP)
+  find_package(OpenMP COMPONENTS CXX)
+  if(NOT OpenMP_CXX_FOUND)
+    message(WARNING "OpenMP not found. Building without parallelization support.")
+    set(USE_OPENMP OFF)
+  endif()
+endif()
 
 set(SOURCES 
     main.cpp 
     tgaimage.cpp
     geometry.cpp
-    obj_loader_example.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
-target_link_libraries(${PROJECT_NAME} PRIVATE $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>)
+
+# Only link OpenMP if it's found and enabled
+if(USE_OPENMP AND OpenMP_CXX_FOUND)
+  target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
+  target_compile_options(${PROJECT_NAME} PRIVATE ${OpenMP_CXX_FLAGS})
+endif()
 
 file(GENERATE OUTPUT .gitignore CONTENT "*")

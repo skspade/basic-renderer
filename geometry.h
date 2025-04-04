@@ -156,11 +156,7 @@ public:
      * - Surface normals
      * - Light directions
      */
-    vec3 normalize() const
-    {
-        float len = length();
-        return len > 0 ? *this / len : *this;
-    }
+    vec3 normalize() const;
 
     /**
      * @brief Output stream operator for debugging
@@ -169,9 +165,5 @@ public:
      * vec3 v(1,2,3);
      * std::cout << v;  // Outputs: (1, 2, 3)
      */
-    friend std::ostream &operator<<(std::ostream &os, const vec3 &v)
-    {
-        os << "(" << v.x << ", " << v.y << ", " << v.z << ")";
-        return os;
-    }
+    friend std::ostream &operator<<(std::ostream &os, const vec3 &v);
 };

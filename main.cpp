@@ -1,5 +1,8 @@
 #include <cmath>
+#include <filesystem>
 #include "tgaimage.h"
+#include "model.h"
+#include "obj_loader.h"
 
 // Define color constants in BGRA format (Blue, Green, Red, Alpha)
 // Each color component ranges from 0-255
@@ -65,32 +68,56 @@ void line(int startX, int startY, int endX, int endY, TGAImage &framebuffer, TGA
 int main(int argc, char **argv)
 {
     // Define the dimensions of our framebuffer (image)
-    constexpr int width = 64;  // Width in pixels
-    constexpr int height = 64; // Height in pixels
+    constexpr int width = 800;  // Increased width to accommodate the model
+    constexpr int height = 800; // Increased height to accommodate the model
 
     // Create a new TGA image with specified dimensions and RGB color mode
-    // This acts as our framebuffer - the memory where we'll draw our image
     TGAImage framebuffer(width, height, TGAImage::RGB);
 
-    // Define coordinates for three points that will form a triangle
-    // Each point has an x (horizontal) and y (vertical) coordinate
-    int ax = 7, ay = 3;   // Point A coordinates
-    int bx = 12, by = 37; // Point B coordinates
-    int cx = 62, cy = 53; // Point C coordinates
+    try
+    {
+        // Get the absolute path to the model file by going up one directory from the build folder
+        std::filesystem::path currentPath = std::filesystem::current_path();
+        std::filesystem::path projectRoot = currentPath.parent_path();
+        std::filesystem::path modelPath = projectRoot / "obj" / "diablo3_pose" / "diablo3_pose.obj";
 
-    // Draw the points
-    framebuffer.set(ax, ay, white); // Draw point A
-    framebuffer.set(bx, by, white); // Draw point B
-    framebuffer.set(cx, cy, white); // Draw point C
+        std::cout << "Loading model from: " << modelPath << std::endl;
 
-    // Draw the lines between points with different colors
-    line(ax, ay, bx, by, framebuffer, blue);   // Draw blue line from A to B
-    line(bx, by, cx, cy, framebuffer, green);  // Draw green line from B to C
-    line(ax, ay, cx, cy, framebuffer, red);    // Draw red line from A to C
-    line(cx, cy, ax, ay, framebuffer, yellow); // Draw yellow line from C to A
+        // Load the diablo3_pose.obj model
+        Model model = OBJLoader::loadFromFile(modelPath.string());
 
-    // Save the framebuffer to a TGA image file
-    // This creates a 64x64 image with three white dots
-    framebuffer.write_tga_file("framebuffer.tga");
+        // Print model statistics
+        std::cout << "Model loaded successfully:" << std::endl;
+        std::cout << "Number of vertices: " << model.getVertexCount() << std::endl;
+        std::cout << "Number of edges: " << model.getEdgeCount() << std::endl;
+
+        // Draw all edges of the model
+        for (size_t i = 0; i < model.getEdgeCount(); i++)
+        {
+            const auto &edge = model.getEdge(i);
+            const vec3 &v1 = model.getVertex(edge.first);
+            const vec3 &v2 = model.getVertex(edge.second);
+
+            // Convert 3D coordinates to 2D screen coordinates
+            // Simple orthographic projection for now
+            int x1 = static_cast<int>((v1.x + 1.0f) * width / 2.0f);
+            int y1 = static_cast<int>((v1.y + 1.0f) * height / 2.0f);
+            int x2 = static_cast<int>((v2.x + 1.0f) * width / 2.0f);
+            int y2 = static_cast<int>((v2.y + 1.0f) * height / 2.0f);
+
+            // Draw the edge
+            line(x1, y1, x2, y2, framebuffer, white);
+        }
+
+        // Save the framebuffer to a TGA image file
+        framebuffer.write_tga_file("framebuffer.tga");
+        std::cout << "Image saved to framebuffer.tga" << std::endl;
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return 1;
+    }
+
     return 0;
 }
