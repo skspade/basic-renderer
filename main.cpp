@@ -3,43 +3,11 @@
 
 void line(int startX, int startY, int endX, int endY, TGAImage &framebuffer, TGAColor color)
 {
-    bool steep = false;
-    // If the line is steep, we transpose the image
-    if (std::abs(startX - endX) < std::abs(startY - endY))
+    for (float interpolationFactor = 0; interpolationFactor < 1; interpolationFactor += 0.2)
     {
-        std::swap(startX, startY);
-        std::swap(endX, endY);
-        steep = true;
-    }
-    // Make it left-to-right
-    if (startX > endX)
-    {
-        std::swap(startX, endX);
-        std::swap(startY, endY);
-    }
-
-    int dx = endX - startX;
-    int dy = endY - startY;
-    float derror = std::abs(dy / float(dx));
-    float error = 0;
-    int y = startY;
-
-    for (int x = startX; x <= endX; x++)
-    {
-        if (steep)
-        {
-            framebuffer.set(y, x, color);
-        }
-        else
-        {
-            framebuffer.set(x, y, color);
-        }
-        error += derror;
-        if (error > 0.5)
-        {
-            y += (endY > startY ? 1 : -1);
-            error -= 1.0;
-        }
+        int currentX = std::round(startX + (endX - startX) * interpolationFactor);
+        int currentY = std::round(startY + (endY - startY) * interpolationFactor);
+        framebuffer.set(currentX, currentY, color);
     }
 }
 
