@@ -1,13 +1,13 @@
 #include <cmath>
 #include "tgaimage.h"
 
-void line(int startX, int startY, int endX, int endY, TGAImage &image, TGAColor color)
+void line(int startX, int startY, int endX, int endY, TGAImage &framebuffer, TGAColor color)
 {
-    for (float interpolationFactor = 0; interpolationFactor < 1; interpolationFactor += 0.1)
+    for (float interpolationFactor = 0; interpolationFactor < 1; interpolationFactor += 0.2)
     {
-        int currentX = startX + (endX - startX) * interpolationFactor;
-        int currentY = startY + (endY - startY) * interpolationFactor;
-        image.set(currentX, currentY, color);
+        int currentX = std::round(startX + (endX - startX) * interpolationFactor);
+        int currentY = std::round(startY + (endY - startY) * interpolationFactor);
+        framebuffer.set(currentX, currentY, color);
     }
 }
 
