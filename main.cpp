@@ -73,9 +73,10 @@ int main(int argc, char **argv)
     framebuffer.set(cx, cy, white); // Draw point C
 
     // Draw the lines between points with different colors
-    line(ax, ay, bx, by, framebuffer, blue);  // Draw blue line from A to B
-    line(bx, by, cx, cy, framebuffer, green); // Draw green line from B to C
-    line(ax, ay, cx, cy, framebuffer, red);   // Draw red line from A to C
+    line(ax, ay, bx, by, framebuffer, blue);   // Draw blue line from A to B
+    line(bx, by, cx, cy, framebuffer, green);  // Draw green line from B to C
+    line(ax, ay, cx, cy, framebuffer, red);    // Draw red line from A to C
+    line(cx, cy, ax, ay, framebuffer, yellow); // Draw yellow line from C to A
 
     // Save the framebuffer to a TGA image file
     // This creates a 64x64 image with three white dots
