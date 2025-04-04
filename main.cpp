@@ -3,11 +3,43 @@
 
 void line(int startX, int startY, int endX, int endY, TGAImage &framebuffer, TGAColor color)
 {
-    for (float interpolationFactor = 0; interpolationFactor < 1; interpolationFactor += 0.2)
+    bool steep = false;
+    // If the line is steep, we transpose the image
+    if (std::abs(startX - endX) < std::abs(startY - endY))
     {
-        int currentX = std::round(startX + (endX - startX) * interpolationFactor);
-        int currentY = std::round(startY + (endY - startY) * interpolationFactor);
-        framebuffer.set(currentX, currentY, color);
+        std::swap(startX, startY);
+        std::swap(endX, endY);
+        steep = true;
+    }
+    // Make it left-to-right
+    if (startX > endX)
+    {
+        std::swap(startX, endX);
+        std::swap(startY, endY);
+    }
+
+    int dx = endX - startX;
+    int dy = endY - startY;
+    float derror = std::abs(dy / float(dx));
+    float error = 0;
+    int y = startY;
+
+    for (int x = startX; x <= endX; x++)
+    {
+        if (steep)
+        {
+            framebuffer.set(y, x, color);
+        }
+        else
+        {
+            framebuffer.set(x, y, color);
+        }
+        error += derror;
+        if (error > 0.5)
+        {
+            y += (endY > startY ? 1 : -1);
+            error -= 1.0;
+        }
     }
 }
 
@@ -35,11 +67,15 @@ int main(int argc, char **argv)
     int bx = 12, by = 37; // Point B coordinates
     int cx = 62, cy = 53; // Point C coordinates
 
-    // Set individual pixels to white at the specified coordinates
-    // This is the most basic form of rendering - setting individual pixels
+    // Draw the points
     framebuffer.set(ax, ay, white); // Draw point A
     framebuffer.set(bx, by, white); // Draw point B
     framebuffer.set(cx, cy, white); // Draw point C
+
+    // Draw the lines between points with different colors
+    line(ax, ay, bx, by, framebuffer, blue);  // Draw blue line from A to B
+    line(bx, by, cx, cy, framebuffer, green); // Draw green line from B to C
+    line(ax, ay, cx, cy, framebuffer, red);   // Draw red line from A to C
 
     // Save the framebuffer to a TGA image file
     // This creates a 64x64 image with three white dots
