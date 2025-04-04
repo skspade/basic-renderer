@@ -11,11 +11,16 @@ constexpr TGAColor yellow = {{0, 200, 255, 255}};  // Custom yellow
 
 void line(int startX, int startY, int endX, int endY, TGAImage &framebuffer, TGAColor color)
 {
+    // Check if the line is steep (more vertical than horizontal) rises more than it runs
+    bool steep = std::abs(endY - startY) > std::abs(endX - startX);
+    if (steep)
+    {
+        std::swap(startX, startY);
+        std::swap(endX, endY);
+    }
     // Iterate through each x-coordinate between start and end points
     for (int x = startX; x <= endX; x++)
     {
-        // Check if the line is steep (more vertical than horizontal) rises more than it runs
-        bool steep = std::abs(endY - startY) > std::abs(endX - startX);
         if (startX > endX)
         {
             // Swap the start and end points if startX is greater than endX
