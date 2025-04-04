@@ -1,16 +1,6 @@
 #include <cmath>
 #include "tgaimage.h"
 
-void line(int startX, int startY, int endX, int endY, TGAImage &framebuffer, TGAColor color)
-{
-    for (float interpolationFactor = 0; interpolationFactor < 1; interpolationFactor += 0.2)
-    {
-        int currentX = std::round(startX + (endX - startX) * interpolationFactor);
-        int currentY = std::round(startY + (endY - startY) * interpolationFactor);
-        framebuffer.set(currentX, currentY, color);
-    }
-}
-
 // Define color constants in BGRA format (Blue, Green, Red, Alpha)
 // Each color component ranges from 0-255
 constexpr TGAColor white = {{255, 255, 255, 255}}; // Pure white (all channels at max)
@@ -18,6 +8,54 @@ constexpr TGAColor green = {{0, 255, 0, 255}};     // Pure green
 constexpr TGAColor red = {{0, 0, 255, 255}};       // Pure red
 constexpr TGAColor blue = {{255, 128, 64, 255}};   // Custom blue
 constexpr TGAColor yellow = {{0, 200, 255, 255}};  // Custom yellow
+
+void line(int startX, int startY, int endX, int endY, TGAImage &framebuffer, TGAColor color)
+{
+    // Iterate through each x-coordinate between start and end points
+    for (int x = startX; x <= endX; x++)
+    {
+        // Check if the line is steep (more vertical than horizontal) rises more than it runs
+        bool steep = std::abs(endY - startY) > std::abs(endX - startX);
+        if (startX > endX)
+        {
+            // Swap the start and end points if startX is greater than endX
+            // This ensures we always iterate from left to right
+            std::swap(startX, endX);
+            std::swap(startY, endY);
+        }
+        // Calculate the interpolation factor (t) between 0 and 1
+        // This represents how far along the line we are from start to end
+        // t = 0 means we're at the start point
+        // t = 1 means we're at the end point
+        float interpolationFactor = (x - startX) / static_cast<float>(endX - startX);
+
+        // Use linear interpolation to find the corresponding y-coordinate
+        // y = y1 + (y2 - y1) * t
+        // This formula gives us a point that lies on the line between (startX, startY) and (endX, endY)
+        // The interpolation ensures we get a straight line by calculating the exact y position
+        // for each x position based on the ratio of how far we've progressed along the line
+        int y = startY + (endY - startY) * interpolationFactor;
+
+        // Set the pixel at the calculated (x,y) position to the specified color
+        // For steep lines (where vertical change > horizontal change), we transpose the coordinates
+        // This is crucial because:
+        // 1. Steep lines have large y-changes between x-steps, causing gaps because we are iterating through x-coordinates.
+        // 2. By transposing, we convert the steep line into a shallow line relative to our iteration
+        // 3. This gives us more sampling points along the line's primary axis of change
+        // 4. The result is a continuous line with no gaps, regardless of angle
+        // Example: For a line from (0,0) to (1,10):
+        // - Without transposing: Only 2 points (at x=0 and x=1)
+        // - With transposing: 10 points (at y=0 through y=10)
+        if (steep)
+        {
+            framebuffer.set(y, x, color);
+        }
+        else
+        {
+            framebuffer.set(x, y, color);
+        }
+    }
+}
 
 int main(int argc, char **argv)
 {
